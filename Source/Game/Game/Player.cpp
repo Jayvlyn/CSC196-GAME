@@ -81,66 +81,73 @@ void Player::Update(float dt) {
 
 void Player::OnCollision(Actor* other) 
 {
-    if (other->m_tag == "Enemy")
-    {
-        // Apply force from other car
-        //AddForce(other->GetVelocity()/6);
+    if (!m_collision) {
+        m_collision = true; // TURNS OFF COLLISION, MAKE TINY SHORT TIMER TO SET IT BACK TO FALSE
+        m_collisionTimer = 1.0f;
 
-        int hitSelection = kiko::random(1, 3);
-        switch (hitSelection) {
-        case 1:
-            kiko::g_audioSystem.PlayOneShot("hit1");
-            break;
-        case 2:
-            kiko::g_audioSystem.PlayOneShot("hit2");
-            break;
-        case 3:
-            kiko::g_audioSystem.PlayOneShot("hit3");
-            break;
-        }
-        
+        if (other->m_tag == "Enemy")
+        {
+            // Collision force
+            if (kiko::Mag(m_velocity.x, m_velocity.y) < kiko::Mag(other->GetVelocity().x, other->GetVelocity().y)) {
+                AddForce(other->GetVelocity());
+            }
 
-        // Crash Particles
-        kiko::EmitterData data;
-        data.burst = true;
-        data.burstCount = 100;
-        data.spawnRate = 10000;
-        data.angle = kiko::DegToRad(kiko::randomf(0.0f, 360.0f));
-        data.angleRange = kiko::DegToRad(kiko::randomf(30.0f, 180.0f));
-        data.lifetimeMin = 0.5f;
-        data.lifetimeMax = 1.0f;
-        data.speedMin = 300;
-        data.speedMax = 600;
-        data.damping = 0.2f;
-        data.color = kiko::Color{ 1, 0.5, 0, 1 };
-        kiko::Transform transform{ { kiko::Lerp(m_transform.position,other->m_transform.position, 0.5)}, m_transform.rotation, 1 };
-        auto emitter = std::make_unique<kiko::Emitter>(transform, data);
-        emitter->m_lifespan = 0.1f;
-        m_scene->Add(std::move(emitter));
+            int hitSelection = kiko::random(1, 3);
+            switch (hitSelection) {
+            case 1:
+                kiko::g_audioSystem.PlayOneShot("hit1");
+                break;
+            case 2:
+                kiko::g_audioSystem.PlayOneShot("hit2");
+                break;
+            case 3:
+                kiko::g_audioSystem.PlayOneShot("hit3");
+                break;
+            }
 
-        m_health--;
-        if (m_health <= 0) {
-            // Death Particles
+
+            // Crash Particles
             kiko::EmitterData data;
             data.burst = true;
-            data.burstCount = 300;
-            data.spawnRate = 250;
-            data.angle = 0;
-            data.angleRange = kiko::Pi;
+            data.burstCount = 100;
+            data.spawnRate = 10000;
+            data.angle = kiko::DegToRad(kiko::randomf(0.0f, 360.0f));
+            data.angleRange = kiko::DegToRad(kiko::randomf(30.0f, 180.0f));
             data.lifetimeMin = 0.5f;
             data.lifetimeMax = 1.0f;
             data.speedMin = 300;
             data.speedMax = 600;
             data.damping = 0.2f;
             data.color = kiko::Color{ 1, 0.5, 0, 1 };
-            kiko::Transform transform{ { m_transform.position }, m_transform.rotation, 1 };
+            kiko::Transform transform{ { kiko::Lerp(m_transform.position, other->m_transform.position, 0.5)}, m_transform.rotation, 1 };
             auto emitter = std::make_unique<kiko::Emitter>(transform, data);
-            emitter->m_lifespan = 0.5f;
+            emitter->m_lifespan = 0.1f;
             m_scene->Add(std::move(emitter));
 
-            m_destroyed = true;
-            dynamic_cast<DrivingGame*>(m_game)->SetState(DrivingGame::eState::PlayerDeadStart);
-            
+            m_health--;
+            if (m_health <= 0) {
+                // Death Particles
+                kiko::EmitterData data;
+                data.burst = true;
+                data.burstCount = 300;
+                data.spawnRate = 250;
+                data.angle = 0;
+                data.angleRange = kiko::Pi;
+                data.lifetimeMin = 0.5f;
+                data.lifetimeMax = 1.0f;
+                data.speedMin = 300;
+                data.speedMax = 600;
+                data.damping = 0.2f;
+                data.color = kiko::Color{ 1, 0.5, 0, 1 };
+                kiko::Transform transform{ { m_transform.position }, m_transform.rotation, 1 };
+                auto emitter = std::make_unique<kiko::Emitter>(transform, data);
+                emitter->m_lifespan = 0.5f;
+                m_scene->Add(std::move(emitter));
+
+                m_destroyed = true;
+                dynamic_cast<DrivingGame*>(m_game)->SetState(DrivingGame::eState::PlayerDeadStart);
+
+            }
         }
     }
 }

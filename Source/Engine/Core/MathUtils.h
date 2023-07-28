@@ -44,4 +44,9 @@ namespace kiko {
 		return sqrt(pow(x, 2) + pow(y, 2));
 	}
 
+	template <typename T>
+	inline T Mag(const T& v) {
+		return sqrt(pow(v.x, 2) + pow(v.y, 2));
+	}
+
 }

@@ -40,6 +40,8 @@ namespace kiko {
 
 	protected:
 		bool m_destroyed = false;
+		bool m_collision = false;
+		float m_collisionTimer = 0;
 
 		std::shared_ptr<Model> m_model;
 

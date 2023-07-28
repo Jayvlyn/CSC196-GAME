@@ -18,10 +18,10 @@ public:
 
 	float GetHealth();
 
+	float m_currentSpeed = 0;
 private:
 	
 	float m_enginePower = 0;
-	float m_currentSpeed = 0;
 	float m_acceleration = 0; 
 	float m_brakePower = 0; 
 	float m_turnRate = 0;

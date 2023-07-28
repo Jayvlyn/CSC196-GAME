@@ -9,53 +9,48 @@
 void Enemy::Update(float dt) {
     Actor::Update(dt);
 
-    Player* player = m_scene->GetActor<Player>();
+    m_player = m_scene->GetActor<Player>();
 
-    if (player) 
+    if (m_player != nullptr) 
     {
-        float playerDistance = m_transform.position.Distance(player->m_transform.position);
-
         m_currentSpeed = kiko::Mag(m_velocity.x, m_velocity.y);
 
-        // BRAKE
-        if (playerDistance < 10) {
-            if (m_drive > -1) m_drive -= m_brakePower;
-        }
-        // GAS
-        else if (playerDistance > 300 && m_currentSpeed < 100) {
-            if (m_drive < 1) m_drive += m_acceleration;
-        }
-        // Cruising
-        else {
-            if (m_drive < 0.001 && m_drive > -0.001) m_drive = 0;
-            else if (m_drive > 0) m_drive -= 0.005;
-            else if (m_drive < 0) m_drive += 0.005;
-        }
         kiko::vec2 forward = kiko::vec2{ 0, -1 }.Rotate(m_transform.rotation);
 
-        float angle = kiko::Vector2::Angle(forward.Normalized(), (player->m_transform.position - m_transform.position).Normalized());
-        float degreesAngle = kiko::RadToDeg(angle);
-
-        //std::cout << "Player Distance: " << playerDistance << "\n"
-         //   << "angle: " << angle << "\n"
-         //   << "degrees angle: " << degreesAngle << "\n";
-        //std::cout << m_drive << "\n";
-
-        if ((degreesAngle > 30 && degreesAngle < 150) && m_rotate > -1) m_rotate -= 0.05f;
-
-        else if ((degreesAngle > 240 && degreesAngle < 330) && m_rotate < 1) m_rotate += 0.05f;
-
-        else if (m_currentSpeed) {
-            // Bring rotate back to zero
-            if (m_rotate < 0.001 && m_rotate > -0.001) m_rotate = 0;
-            else if (m_rotate > 0) m_rotate -= 0.01f;
-            else if (m_rotate < 0) m_rotate += 0.01f;
-        }
+        float playerDistance = m_transform.position.Distance(m_player->m_transform.position);
         
 
-        // Steer Rotations
-        if (m_currentSpeed != 0) m_transform.rotation += (m_rotate * ((m_currentSpeed / 100) * m_drive)) * m_turnRate * kiko::g_time.GetDeltaTime();
+        switch (FindPlayer()) {
+            case ePlayerLocation::Front:
+                Steer(0);
+                if (m_currentSpeed < m_maxSpeed) Drive();
+                else Coast();
+                break;
+            case ePlayerLocation::FrontLeft:
+                Steer(-0.01);
+                if (m_currentSpeed < m_maxSpeed) Drive();
+                else Coast();
+                break;
+            case ePlayerLocation::FrontRight:
+                Steer(0.01);
+                if (m_currentSpeed < m_maxSpeed) Drive();
+                else Coast();
+                break;
+            case ePlayerLocation::BackLeft:
+                if (playerDistance < 250) Steer(-0.015);
+                else Steer(0.015);
+                if (m_currentSpeed < m_maxSpeed) Reverse();
+                else Coast();
+                break;
+            case ePlayerLocation::BackRight:
+                if (playerDistance < 250) Steer(0.015);
+                else Steer(-0.015);
+                if (m_currentSpeed < m_maxSpeed) Reverse();
+                else Coast();
+                break;
+        }
 
+        
         // Move accordingly
         AddForce(forward * m_enginePower * m_drive * kiko::g_time.GetDeltaTime());
 
@@ -67,35 +62,91 @@ void Enemy::Update(float dt) {
 
 void Enemy::OnCollision(Actor* other)
 {
-    if (other->m_tag == "Player") {
-        m_game->AddPoints(100);
+    if (!m_collision) {
+        m_collision = true; // TURNS OFF COLLISION, MAKE TINY SHORT TIMER TO SET IT BACK TO FALSE
+        m_collisionTimer = 1.0f;
 
-        // Apply force from other car
-        AddForce(other->GetVelocity() / 2);
-
-        m_health--;
-        if (m_health <= 0) {
-            // Death Particles
-            kiko::EmitterData data;
-            data.burst = true;
-            data.burstCount = 300;
-            data.spawnRate = 10000;
-            data.angle = 0;
-            data.angleRange = kiko::Pi;
-            data.lifetimeMin = 0.5f;
-            data.lifetimeMax = 1.0f;
-            data.speedMin = 300;
-            data.speedMax = 600;
-            data.damping = 0.2f;
-            data.color = kiko::Color{ 1, 0, 0, 1 };
-            kiko::Transform transform{ { m_transform.position }, m_transform.rotation, 1 };
-            auto emitter = std::make_unique<kiko::Emitter>(transform, data);
-            emitter->m_lifespan = 0.5f;
-            m_scene->Add(std::move(emitter));
+        if (other->m_tag == "Player") {
+            // Collision force
+            if (m_currentSpeed < kiko::Mag(other->GetVelocity().x, other->GetVelocity().y)) {
+                AddForce(other->GetVelocity() * 1.5);
+            }
 
 
-            m_destroyed = true;
+            m_health--;
+            if (m_health <= 0) {
+                // Death Particles
+                kiko::EmitterData data;
+                data.burst = true;
+                data.burstCount = 300;
+                data.spawnRate = 10000;
+                data.angle = 0;
+                data.angleRange = kiko::Pi;
+                data.lifetimeMin = 0.5f;
+                data.lifetimeMax = 1.0f;
+                data.speedMin = 300;
+                data.speedMax = 600;
+                data.damping = 0.2f;
+                data.color = kiko::Color{ 1, 0, 0, 1 };
+                kiko::Transform transform{ { m_transform.position }, m_transform.rotation, 1 };
+                auto emitter = std::make_unique<kiko::Emitter>(transform, data);
+                emitter->m_lifespan = 0.5f;
+                m_scene->Add(std::move(emitter));
 
+
+                m_destroyed = true;
+
+            }
         }
     }
 }
+
+Enemy::ePlayerLocation Enemy::FindPlayer(kiko::vec2 forward)
+{
+    float angle = kiko::RadToDeg(kiko::Vector2::SignedAngle(forward.Normalized(), (m_player->m_transform.position - m_transform.position).Normalized()));
+
+    if (angle < -10 && angle > -90)
+    {
+        return ePlayerLocation::FrontLeft;
+    }
+    else if (angle < -90 && angle > -180)
+    {
+        return ePlayerLocation::BackLeft;
+    }
+    else if (angle > 10 && angle < 90)
+    { 
+        return ePlayerLocation::FrontRight;
+    }
+    else if (angle > 90 && angle < 180)
+    {
+        return ePlayerLocation::BackRight;
+    }
+    else
+    {
+        return ePlayerLocation::Front;
+    }
+}
+
+Enemy::ePlayerLocation Enemy::FindPlayer()
+{
+    kiko::vec2 forward = kiko::vec2{ 0, -1 }.Rotate(m_transform.rotation);
+    return FindPlayer(forward);
+}
+
+void Enemy::Steer(float steerAmount)
+{
+    if (steerAmount) { // Steer amount not zero
+        m_rotate += steerAmount;
+        if (m_currentSpeed != 0) m_transform.rotation += (m_rotate * ((m_currentSpeed / 100) * m_drive)) * m_turnRate * kiko::g_time.GetDeltaTime();
+    }
+    else { // Steer amount zero
+        if (m_currentSpeed)
+        { // Car is moving, correct steering wheel because steer is 0
+            if (m_rotate < 0.001 && m_rotate > -0.001) m_rotate = 0;
+            else if (m_rotate > 0) m_rotate -= 0.05f;
+            else if (m_rotate < 0) m_rotate += 0.05f;
+        }
+
+    }
+}
+

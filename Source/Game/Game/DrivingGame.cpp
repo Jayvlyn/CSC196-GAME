@@ -69,16 +69,17 @@ void DrivingGame::Update(float dt)
 	case eState::StartLevel:
 		m_scene->RemoveAll();
 	{
-		std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(1200, 0.01, 1, kiko::DegToRad(kiko::randomf(20.0f, 40.0f)), kiko::Transform { { kiko::randomf(kiko::g_renderer.GetWidth()), kiko::randomf(kiko::g_renderer.GetHeight()) }, kiko::randomf(kiko::TwoPi), 9 }, kiko::g_modelManager.Get("EnemyCar.txt"));
-		enemy->m_tag = "Enemy";
-		enemy->m_game = this;
-		m_scene->Add(std::move(enemy));
-
-		std::unique_ptr<Player> player = std::make_unique<Player>(1000, 0.01, 0.005, kiko::DegToRad(25), kiko::Transform{ {500, 300}, 0, 10 }, kiko::g_modelManager.Get("Car.txt"));
+		std::unique_ptr<Player> player = std::make_unique<Player>(1000, 0.01, 0.005, kiko::DegToRad(25), kiko::Transform{ {kiko::g_renderer.GetWidth() / 2, kiko::g_renderer.GetHeight() / 2}, 0, 10 }, kiko::g_modelManager.Get("Car.txt"));
 		player->m_tag = "Player";
 		player->SetDamping(0.95f);
 		player->m_game = this;
 		m_scene->Add(std::move(player));
+
+		std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(900, 0.01, 1, kiko::DegToRad(20.0f), kiko::Transform { { kiko::g_renderer.GetWidth()/2 + 100,kiko::g_renderer.GetHeight()/2 }, 0, 9 }, kiko::g_modelManager.Get("EnemyCar.txt"));
+		enemy->m_tag = "Enemy";
+		enemy->m_game = this;
+		m_scene->Add(std::move(enemy));
+
 	}
 		m_state = eState::Game;
 		break;
@@ -88,7 +89,7 @@ void DrivingGame::Update(float dt)
 			m_spawnTimer += dt;
 			if (m_spawnTimer >= m_spawnTime) {
 				m_spawnTimer = 0;
-				std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(1200, 0.01, 1, kiko::DegToRad(kiko::randomf(20.0f, 40.0f)), kiko::Transform { { kiko::randomf(kiko::g_renderer.GetWidth()), kiko::randomf(kiko::g_renderer.GetHeight()) }, kiko::randomf(kiko::TwoPi), 9 }, kiko::g_modelManager.Get("EnemyCar.txt"));
+				std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(900, 0.01, 1, kiko::DegToRad(kiko::randomf(20.0f, 40.0f)), kiko::Transform { { kiko::randomf(kiko::g_renderer.GetWidth()), kiko::randomf(kiko::g_renderer.GetHeight()) }, kiko::randomf(kiko::TwoPi), 9 }, kiko::g_modelManager.Get("EnemyCar.txt"));
 				enemy->m_tag = "Enemy";
 				enemy->m_game = this;
 				m_scene->Add(std::move(enemy));

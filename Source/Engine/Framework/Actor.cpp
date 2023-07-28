@@ -10,6 +10,12 @@ namespace kiko {
 
 		m_transform.position += m_velocity * dt;
 		m_velocity *= std::pow(1.0f - m_damping, dt);
+
+		// Collision timer
+		if (m_collision && m_collisionTimer > 0) {
+			m_collisionTimer -= dt;
+			if (m_collisionTimer <= 0) m_collision = false;
+		}
 	}
 
 	void Actor::Draw(kiko::Renderer& renderer) 
