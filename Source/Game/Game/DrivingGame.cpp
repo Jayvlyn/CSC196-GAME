@@ -1,6 +1,7 @@
 #include "DrivingGame.h"
 #include "Player.h"
 #include "Enemy.h"
+#include "Clock.h"
 
 #include "Framework/Scene.h"
 #include "Framework/Emitter.h"
@@ -11,6 +12,11 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/Text.h"
 #include "Renderer/ModelManager.h"
+
+#include "Core/Time.h"
+#include "Core/Transform.h"
+
+#include <memory>
 
 
 
@@ -35,6 +41,9 @@ bool DrivingGame::Init()
 	m_timerText = std::make_unique<kiko::Text>(m_font);
 	m_timerText->Create(kiko::g_renderer, "Time Survived: 0", kiko::Color{ 1, 1, 1, 1});
 
+	m_bonusTimeText = std::make_unique<kiko::Text>(m_font);
+	m_bonusTimeText->Create(kiko::g_renderer, "+ 0", kiko::Color{ 1, 1, 1, 1});
+
 	// Load audio
 	kiko::g_audioSystem.AddAudio("music", "TDOST1.wav");
 	kiko::g_audioSystem.AddAudio("hit1", "Hit1.wav");
@@ -44,8 +53,6 @@ bool DrivingGame::Init()
 
 	// Scene
 	m_scene = std::make_unique<kiko::Scene>();
-
-
 
 	return true;
 }
@@ -63,7 +70,6 @@ void DrivingGame::Update(float dt)
 		}
 		break;
 	case eState::StartGame:
-		m_score = 0;
 		m_state = eState::StartLevel;
 		break;
 	case eState::StartLevel:
@@ -75,10 +81,11 @@ void DrivingGame::Update(float dt)
 		player->m_game = this;
 		m_scene->Add(std::move(player));
 
-		std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(900, 0.01, 1, kiko::DegToRad(20.0f), kiko::Transform { { kiko::g_renderer.GetWidth()/2 + 100,kiko::g_renderer.GetHeight()/2 }, 0, 9 }, kiko::g_modelManager.Get("EnemyCar.txt"));
+		std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(1010, 0.01, 0.01, kiko::DegToRad(20.0f), kiko::Transform { { kiko::g_renderer.GetWidth()/2 + 100,kiko::g_renderer.GetHeight()/2 }, 0, 9 }, kiko::g_modelManager.Get("EnemyCar.txt"));
 		enemy->m_tag = "Enemy";
 		enemy->m_game = this;
 		m_scene->Add(std::move(enemy));
+		m_scene->IncrementEnemyCount();
 
 	}
 		m_state = eState::Game;
@@ -87,23 +94,33 @@ void DrivingGame::Update(float dt)
 	case eState::Game:
 		{
 			m_spawnTimer += dt;
-			if (m_spawnTimer >= m_spawnTime) {
+			if (m_spawnTimer >= m_spawnTime && m_scene->GetEnemyCount() < 20) {
 				m_spawnTimer = 0;
-				std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(900, 0.01, 1, kiko::DegToRad(kiko::randomf(20.0f, 40.0f)), kiko::Transform { { kiko::randomf(kiko::g_renderer.GetWidth()), kiko::randomf(kiko::g_renderer.GetHeight()) }, kiko::randomf(kiko::TwoPi), 9 }, kiko::g_modelManager.Get("EnemyCar.txt"));
+				std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(1010, 0.01, 0.01, kiko::DegToRad(20.0f), kiko::Transform { { kiko::g_renderer.GetWidth() / 2 + 100, kiko::g_renderer.GetHeight() / 2 }, 0, 9 }, kiko::g_modelManager.Get("EnemyCar.txt"));
 				enemy->m_tag = "Enemy";
 				enemy->m_game = this;
 				m_scene->Add(std::move(enemy));
+				m_scene->IncrementEnemyCount();
 			}
+
+			m_clockSpawnTimer += dt;
+			if (m_clockSpawnTimer >= m_clockSpawnTime && m_scene->GetEnemyCount() < 20) {
+				m_clockSpawnTimer = 0;
+				int clockWorth = (m_scene->GetEnemyCount() + m_gameTime/4) * kiko::g_time.GetTimeScale();
+				std::unique_ptr<Clock> clock = std::make_unique<Clock>(clockWorth, kiko::Transform {{kiko::random(0,kiko::g_renderer.GetWidth()), kiko::random(0,kiko::g_renderer.GetHeight())}, 0, 10}, kiko::g_modelManager.Get("Clock.txt"));
+				clock->m_tag = "Clock";
+				clock->m_game = this;
+				m_scene->Add(std::move(clock));
+			}
+
+
 		}
 
 		break;
 	case eState::PlayerDeadStart:
 		m_stateTimer = 3;
-		if (m_lives == 0) m_state = eState::GameOver;
-		else {
-			m_state = eState::PlayerDead;
-			m_lives--;
-		}
+		m_state = eState::PlayerDead;
+		
 		break;
 	case eState::PlayerDead:
 		m_stateTimer -= dt;
@@ -128,6 +145,7 @@ void DrivingGame::Update(float dt)
 	if (player) {
 		m_healthText->Create(kiko::g_renderer, std::to_string((int)player->GetHealth()), { 1,1,1,1 });
 		m_timerText->Create(kiko::g_renderer, "Time Survived: " + std::to_string(m_gameTime), {1,1,1,1});
+		m_bonusTimeText->Create(kiko::g_renderer, "+ " + std::to_string(player->GetBonusTime()), {1,1,1,1});
 		m_gameTime += dt;
 	}
 	
@@ -146,7 +164,9 @@ void DrivingGame::Draw(kiko::Renderer& renderer)
 	}
 	
 	if (m_state != eState::Title) {
-		m_timerText->Draw(renderer, 40, renderer.GetHeight()-50);
+		m_timerText->Draw(renderer, 40, renderer.GetHeight()-100);
+
+		m_bonusTimeText->Draw(renderer, 40, renderer.GetHeight()-50);
 	}
 
 	m_healthText->Draw(renderer, 40, 40);

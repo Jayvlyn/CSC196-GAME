@@ -85,6 +85,10 @@ void Player::OnCollision(Actor* other)
         m_collision = true; // TURNS OFF COLLISION, MAKE TINY SHORT TIMER TO SET IT BACK TO FALSE
         m_collisionTimer = 1.0f;
 
+        if (other->m_tag == "Clock") {
+            other->m_destroyed = true;
+        }
+
         if (other->m_tag == "Enemy")
         {
             // Collision force

@@ -93,6 +93,8 @@ void Enemy::OnCollision(Actor* other)
                 emitter->m_lifespan = 0.5f;
                 m_scene->Add(std::move(emitter));
 
+                m_scene->DecrementEnemyCount();
+
 
                 m_destroyed = true;
 

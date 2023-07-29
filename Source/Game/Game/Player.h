@@ -18,6 +18,9 @@ public:
 
 	float GetHealth();
 
+	void AddBonsuTime(int time) { m_bonusTime = time; }
+	float GetBonusTime() { return m_bonusTime; }
+
 	float m_currentSpeed = 0;
 private:
 	
@@ -29,9 +32,11 @@ private:
 	
 	float m_rotate = 0;
 
-	float m_health = 500;
+	float m_health = 100;
 
 	float m_timeScale = 1;
+
+	float m_bonusTime = 0;
 
 };
 

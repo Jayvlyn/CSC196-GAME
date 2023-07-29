@@ -38,8 +38,8 @@ namespace kiko {
 		std::string m_tag;
 		float m_lifespan = -1.0f;
 
-	protected:
 		bool m_destroyed = false;
+	protected:
 		bool m_collision = false;
 		float m_collisionTimer = 0;
 

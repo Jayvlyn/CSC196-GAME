@@ -7,6 +7,8 @@ namespace kiko
 {
 	class Renderer; // Forward declaration
 
+
+
 	class Scene
 	{
 	public:
@@ -21,9 +23,14 @@ namespace kiko
 		template<typename T>
 		T* GetActor();
 
+		void IncrementEnemyCount() { m_enemyCount++; }
+		void DecrementEnemyCount() { m_enemyCount--; }
+		int GetEnemyCount() { return m_enemyCount; }
 
 		friend class Actor;
 	private:
+
+		int m_enemyCount = 0;
 		std::list<std::unique_ptr<Actor>> m_actors;
 	};
 
