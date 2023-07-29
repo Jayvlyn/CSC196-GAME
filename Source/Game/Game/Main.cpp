@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
     // Initialize engine
     kiko::g_renderer.Initialize();
-    kiko::g_renderer.CreateWindow("TIME DRIFTER", 1600, 900);
+    kiko::g_renderer.CreateWindow("TIME DRIFTER", 1920, 1440);
 
     kiko::g_inputSystem.Initialize();
     kiko::g_audioSystem.Initialize();

@@ -27,6 +27,8 @@ namespace kiko {
 
         m_window = SDL_CreateWindow(title.c_str(), 100, 100, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
         m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+
+        //SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN);
     
     }
 

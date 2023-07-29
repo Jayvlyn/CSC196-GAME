@@ -23,19 +23,24 @@ public:
 
 	float m_currentSpeed = 0;
 private:
+
+	// Drifting
+	kiko::vec2 m_driftForce{ 0,0 };
+	float m_driftEnginePower = 0;
+	float m_driftDrive = 0;
 	
+	// Driving
 	float m_enginePower = 0;
 	float m_acceleration = 0; 
 	float m_brakePower = 0; 
 	float m_turnRate = 0;
 	float m_drive = 0;
 	
+	// Turning
 	float m_rotate = 0;
 
 	float m_health = 100;
-
 	float m_timeScale = 1;
-
 	float m_bonusTime = 0;
 
 };

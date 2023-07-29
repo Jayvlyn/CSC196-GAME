@@ -45,7 +45,26 @@ void Player::Update(float dt) {
 
     // Move player accordingly
     kiko::vec2 forward = kiko::vec2{ 0, -1 }.Rotate(m_transform.rotation);
-    AddForce(forward * m_enginePower * m_drive * kiko::g_time.GetDeltaTime());
+    if (kiko::g_inputSystem.GetKeyDown(SDL_SCANCODE_LSHIFT) && !kiko::g_inputSystem.GetPreviousKeyDown(SDL_SCANCODE_LSHIFT)) {
+        m_driftDrive = m_drive;
+        m_driftEnginePower = m_enginePower;
+        m_driftForce = forward * m_driftEnginePower * m_driftDrive;
+    }
+    else if (!kiko::g_inputSystem.GetKeyDown(SDL_SCANCODE_LSHIFT) && (m_driftForce.x != 0 || m_driftForce.y != 0)) {
+        m_driftForce = { 0,0 };
+        m_driftDrive = 0;
+        m_driftEnginePower = 0;
+    }
+    else {
+        m_driftForce = kiko::Lerp(m_driftForce, forward * m_driftDrive * m_driftEnginePower, kiko::g_time.GetDeltaTime());
+    }
+
+    if (!kiko::g_inputSystem.GetKeyDown(SDL_SCANCODE_LSHIFT)) {
+        AddForce((forward)*m_enginePower * m_drive * kiko::g_time.GetDeltaTime());
+    }
+    else {
+        AddForce(m_driftForce * kiko::g_time.GetDeltaTime());
+    }
 
     // Wrapping
     m_transform.position.x = kiko::Wrap(m_transform.position.x, kiko::g_renderer.GetWidth());

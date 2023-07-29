@@ -18,7 +18,6 @@ public:
     void OnCollision(Actor* other) override;
 
 private:
-
     float m_time = 0;
 
 };

@@ -33,7 +33,7 @@ public:
 
 private:
 	eState m_state = eState::Title;
-	float m_spawnTimer = 0;
+	float m_spawnTimer = 15;
 	float m_spawnTime = 15;
 	float m_clockSpawnTimer = 0;
 	float m_clockSpawnTime = 20;

@@ -27,12 +27,12 @@ void Enemy::Update(float dt) {
                 else Coast();
                 break;
             case ePlayerLocation::FrontLeft:
-                Steer(-0.01);
+                Steer(-0.03);
                 if (m_currentSpeed < m_maxSpeed) Drive();
                 else Coast();
                 break;
             case ePlayerLocation::FrontRight:
-                Steer(0.01);
+                Steer(0.03);
                 if (m_currentSpeed < m_maxSpeed) Drive();
                 else Coast();
                 break;
@@ -107,19 +107,19 @@ Enemy::ePlayerLocation Enemy::FindPlayer(kiko::vec2 forward)
 {
     float angle = kiko::RadToDeg(kiko::Vector2::SignedAngle(forward.Normalized(), (m_player->m_transform.position - m_transform.position).Normalized()));
 
-    if (angle < -10 && angle > -90)
+    if (angle < -5 && angle > -110)
     {
         return ePlayerLocation::FrontLeft;
     }
-    else if (angle < -90 && angle > -180)
+    else if (angle < -110 && angle > -180)
     {
         return ePlayerLocation::BackLeft;
     }
-    else if (angle > 10 && angle < 90)
+    else if (angle > 5 && angle < 110)
     { 
         return ePlayerLocation::FrontRight;
     }
-    else if (angle > 90 && angle < 180)
+    else if (angle > 110 && angle < 180)
     {
         return ePlayerLocation::BackRight;
     }
@@ -144,7 +144,7 @@ void Enemy::Steer(float steerAmount)
     else { // Steer amount zero
         if (m_currentSpeed)
         { // Car is moving, correct steering wheel because steer is 0
-            if (m_rotate < 0.001 && m_rotate > -0.001) m_rotate = 0;
+            if (m_rotate < 0.01 && m_rotate > -0.01) m_rotate = 0;
             else if (m_rotate > 0) m_rotate -= 0.05f;
             else if (m_rotate < 0) m_rotate += 0.05f;
         }

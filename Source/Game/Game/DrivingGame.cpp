@@ -75,18 +75,11 @@ void DrivingGame::Update(float dt)
 	case eState::StartLevel:
 		m_scene->RemoveAll();
 	{
-		std::unique_ptr<Player> player = std::make_unique<Player>(1000, 0.01, 0.005, kiko::DegToRad(25), kiko::Transform{ {kiko::g_renderer.GetWidth() / 2, kiko::g_renderer.GetHeight() / 2}, 0, 10 }, kiko::g_modelManager.Get("Car.txt"));
+		std::unique_ptr<Player> player = std::make_unique<Player>(1000.0f, 0.01f, 0.005f, kiko::DegToRad(25.0f), kiko::Transform{ {kiko::g_renderer.GetWidth() / 2, kiko::g_renderer.GetHeight() / 2}, 0, 10 }, kiko::g_modelManager.Get("Car.txt"));
 		player->m_tag = "Player";
 		player->SetDamping(0.95f);
 		player->m_game = this;
 		m_scene->Add(std::move(player));
-
-		std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(1010, 0.01, 0.01, kiko::DegToRad(20.0f), kiko::Transform { { kiko::g_renderer.GetWidth()/2 + 100,kiko::g_renderer.GetHeight()/2 }, 0, 9 }, kiko::g_modelManager.Get("EnemyCar.txt"));
-		enemy->m_tag = "Enemy";
-		enemy->m_game = this;
-		m_scene->Add(std::move(enemy));
-		m_scene->IncrementEnemyCount();
-
 	}
 		m_state = eState::Game;
 		break;
@@ -96,7 +89,7 @@ void DrivingGame::Update(float dt)
 			m_spawnTimer += dt;
 			if (m_spawnTimer >= m_spawnTime && m_scene->GetEnemyCount() < 20) {
 				m_spawnTimer = 0;
-				std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(1010, 0.01, 0.01, kiko::DegToRad(20.0f), kiko::Transform { { kiko::g_renderer.GetWidth() / 2 + 100, kiko::g_renderer.GetHeight() / 2 }, 0, 9 }, kiko::g_modelManager.Get("EnemyCar.txt"));
+				std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>(kiko::randomf(1000.0f, 1100.0f), 0.01f, 0.01f, kiko::DegToRad(kiko::randomf(15.0f, 25.0f)), kiko::Transform { { kiko::randomf(0, kiko::g_renderer.GetWidth()), kiko::randomf(0, kiko::g_renderer.GetHeight()) }, 0, kiko::randomf(8, 11) }, kiko::g_modelManager.Get("EnemyCar.txt"));
 				enemy->m_tag = "Enemy";
 				enemy->m_game = this;
 				m_scene->Add(std::move(enemy));
@@ -106,13 +99,12 @@ void DrivingGame::Update(float dt)
 			m_clockSpawnTimer += dt;
 			if (m_clockSpawnTimer >= m_clockSpawnTime && m_scene->GetEnemyCount() < 20) {
 				m_clockSpawnTimer = 0;
-				int clockWorth = (m_scene->GetEnemyCount() + m_gameTime/4) * kiko::g_time.GetTimeScale();
+				float clockWorth = (m_scene->GetEnemyCount() + m_gameTime/4) * kiko::g_time.GetTimeScale();
 				std::unique_ptr<Clock> clock = std::make_unique<Clock>(clockWorth, kiko::Transform {{kiko::random(0,kiko::g_renderer.GetWidth()), kiko::random(0,kiko::g_renderer.GetHeight())}, 0, 10}, kiko::g_modelManager.Get("Clock.txt"));
 				clock->m_tag = "Clock";
 				clock->m_game = this;
 				m_scene->Add(std::move(clock));
 			}
-
 
 		}
 
@@ -149,7 +141,6 @@ void DrivingGame::Update(float dt)
 		m_gameTime += dt;
 	}
 	
-
 	m_scene->Update(dt);
 }
 
